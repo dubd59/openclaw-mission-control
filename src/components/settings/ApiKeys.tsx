@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Key, Plus, Trash2 } from 'lucide-react';
 import { useAgentStore } from '../../store/agentStore';
 import { ApiKey } from '../../types';
+import ProviderSelect from './ProviderSelect';
 
 const ApiKeys: React.FC = () => {
   const { apiKeys, addApiKey, deleteApiKey } = useAgentStore();
@@ -40,20 +41,18 @@ const ApiKeys: React.FC = () => {
             className="rounded-lg border border-gray-700 bg-dark-300 px-4 py-2 text-white"
             required
           />
-          <select
+          <ProviderSelect
             value={provider}
-            onChange={(event) => setProvider(event.target.value as ApiKey['provider'])}
+            onChange={setProvider}
             className="rounded-lg border border-gray-700 bg-dark-300 px-4 py-2 text-white"
-          >
-            <option value="openai">OpenAI</option>
-            <option value="anthropic">Anthropic</option>
-            <option value="google">Google</option>
-            <option value="azure">Azure</option>
-            <option value="aws">AWS</option>
-            <option value="huggingface">HuggingFace</option>
-            <option value="microsoft">Microsoft</option>
-            <option value="custom">Custom</option>
-          </select>
+          />
+          <div className="mt-1 text-xs text-gray-400">
+            Choose the service your key belongs to; you can reuse this component
+            anywhere you need to select a provider.
+          </div>
+          <p className="mt-1 text-xs text-gray-400">
+            Click the dropdown arrow to reveal all provider options.
+          </p>
           <input
             value={keyValue}
             onChange={(event) => setKeyValue(event.target.value)}
