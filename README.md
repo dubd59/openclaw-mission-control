@@ -157,7 +157,7 @@ Mission Control connects to your local OpenClaw installation through direct file
 1. Click on Settings in the sidebar
 2. Go to API Keys section
 3. Click Add API Key
-4. Select provider (OpenAI, Anthropic, etc.)
+4. Select provider (OpenAI, Anthropic, Google, Azure, AWS, HuggingFace, Microsoft, etc.)
 5. Paste your API key
 6. Set a monthly credit limit
 7. Click Save

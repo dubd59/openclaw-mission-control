@@ -48,6 +48,10 @@ const ApiKeys: React.FC = () => {
             <option value="openai">OpenAI</option>
             <option value="anthropic">Anthropic</option>
             <option value="google">Google</option>
+            <option value="azure">Azure</option>
+            <option value="aws">AWS</option>
+            <option value="huggingface">HuggingFace</option>
+            <option value="microsoft">Microsoft</option>
             <option value="custom">Custom</option>
           </select>
           <input

@@ -24,7 +24,15 @@ export interface ApiKey {
   id: string;
   name: string;
   key: string;
-  provider: 'openai' | 'anthropic' | 'google' | 'custom';
+  provider:
+    | 'openai'
+    | 'anthropic'
+    | 'google'
+    | 'azure'
+    | 'aws'
+    | 'huggingface'
+    | 'microsoft'
+    | 'custom';
   monthlyLimit: number;
   used: number;
   status: 'active' | 'inactive' | 'exceeded';
