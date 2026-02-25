@@ -1,0 +1,177 @@
+Mission Control (OpenClaw Dashboard) - Complete User Manual
+
+Overview
+--------
+A complete step‑by‑step manual for the Mission Control front‑end and its
+integration with an OpenClaw installation. It covers development, build, runtime
+usage, and the connection map between the dashboard and OpenClaw.
+
+Flow Chart
+----------
+
+┌─────────────────────────────────────────────────────────────┐
+│                    DEVELOPMENT PHASE                          │
+│  (What your developer does in VS Code)                        │
+│                                                               │
+│  VS CODE ──builds──► Mission Control (code files)            │
+│                           │                                   │
+│                           ▼                                   │
+│                    npm run build                              │
+│                           │                                   │
+│                           ▼                                   │
+│              dist/ folder (static files)                      │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              │ (Copy files once)
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    RUNTIME PHASE                              │
+│  (What you use day-to-day)                                    │
+│                                                               │
+│  YOUR COMPUTER                                                │
+│  ┌─────────────────────────────────────────────────────┐    │
+│  │                                                     │    │
+│  │  Chrome/Edge/Browser                                │    │
+│  │  ┌─────────────────────────────────────────────┐   │    │
+│  │  │                                             │   │    │
+│  │  │  MISSION CONTROL DASHBOARD                  │   │    │
+│  │  │  (Running at http://localhost:5173)         │   │    │
+│  │  │  • NO VS CODE needed                         │   │    │
+│  │  │  • Just a web page                           │   │    │
+│  │  │  • Reads/writes files directly               │   │    │
+│  │  └─────────────────────────────────────────────┘   │    │
+│  │                      │                              │    │
+│  │                      ▼ (direct access)              │    │
+│  │  ┌─────────────────────────────────────────────┐   │    │
+│  │  │  OPENCLAW INSTALLATION                       │   │    │
+│  │  │  ~/.openclaw/                                 │   │    │
+│  │  │  • Config files                               │   │    │
+│  │  │  • Skills directory                           │   │    │
+│  │  │  • Log files                                  │   │    │
+│  │  └─────────────────────────────────────────────┘   │    │
+│  └─────────────────────────────────────────────────────┘    │
+│                                                               │
+│  OPENCLAW GATEWAY (Separate process)                          │
+│  Runs at: http://127.0.0.1:18789                              │
+│  • Handles actual agent execution                             │
+│  • Started via: openclaw gateway start                        │
+└─────────────────────────────────────────────────────────────┘
+
+
+
+Getting Started
+---------------
+1. **Clone or create the project**
+   - Open VS Code and create a new folder named `openclaw-mission-control`.
+   - Copy all source files provided (components, stores, utilities, etc.).
+
+2. **Install dependencies**
+   ```bash
+   cd openclaw-mission-control
+   npm install
+   ```
+
+3. **Start the development server**
+   ```bash
+   npm run dev
+   ```
+   - Visit `http://localhost:5173` in your browser. This loads the dashboard UI.
+
+4. **Production build** (optional):
+   ```bash
+   npm run build
+   npm run preview
+   ```
+   - Serve the `dist/` directory with any static server or wrap in Electron.
+
+
+Usage
+-----
+The app has multiple views accessible via the sidebar. Click the sun/moon icon in
+the bottom-left to toggle light/dark themes. In light mode, accent elements use
+color `#38beba`.
+
+### Dashboard
+- Visualize agent progress, API cost charts, and active agents.
+- Click agent controls to change status (run, pause, complete, fail).
+
+### Agents
+- Add new agents using the "New Agent" button.
+- Specify model settings, tools, API key assignments, and credit limits.
+
+### API Keys
+- Manage providers, limits, and keys.
+
+### Credits
+- View credit usage by agent and set global limits.
+
+### Skill Marketplace
+- Browse and install skills; installation is simulated and logs the CLI command.
+
+### Installed Skills
+- Enable/disable, update, or uninstall skills.
+
+### Activity
+- All system events (agent start/complete, API call, warnings, errors) are logged.
+
+### Settings
+- Placeholder for OpenClaw configuration options.
+
+
+Integration Details
+-------------------
+To connect Mission Control with your OpenClaw installation, follow these steps:
+
+1. **OpenClaw Bridge Layer (`openclawDirectBridge.ts`)**
+   - Create this file in `src/utils/`.
+   - Implement functions that perform filesystem operations and run CLI commands:
+     - `readConfig()` / `writeConfig()` for `~/.openclaw/openclaw.json`
+     - `runCommand(...args)` using `child_process.exec` or Electron IPC.
+     - `scanSkills()` to list `~/.openclaw/skills/*`.
+     - Optionally watch `~/.openclaw/logs/` for realtime events.
+
+2. **CLI Execution**
+   - Use the bridge to call `openclaw agent --agent NAME --message "..."` when
+     user triggers an action in the dashboard.
+   - Capture stdout/stderr and feed back into `agentStore.addActivity(...)`.
+
+3. **File/Log Monitoring**
+   - Periodically read `openclaw.json` and update the dashboard stores with any
+     changes to agent definitions, API keys, etc.
+   - Tail the log files; translate log lines into activity entries.
+
+4. **Gateway Socket**
+   - Connect to `ws://127.0.0.1:18789` (or the configured host/port).
+   - Listen for events such as `agent.started`, `agent.completed`, `api.call`, etc.
+   - Update stores (`agentStore`, `apiStore`, `skillStore`) based on messages.
+
+
+Packaging as a Desktop App
+--------------------------
+1. **Choose a wrapper**: Electron is recommended for broad platform support.
+2. **Add an IPC bridge** (see earlier example) to expose `openclaw` commands to the
+   renderer.
+3. **Load the built dashboard** either from `dist/` or via the dev server during
+   development.
+4. **Set up an auto‑startup** if you want Mission Control to run at login.
+
+
+Troubleshooting
+---------------
+- If the dashboard shows "connection refused", ensure `npm run dev` is running and
+  listening on port 5173.
+- The bridge cannot access `~/.openclaw` if the user running the app does not have
+  permission; run with the same account that installed OpenClaw.
+- Skill installation commands are logged but not executed; to perform real
+  installs, have the bridge call the CLI with `exec`.
+
+
+Conclusion
+----------
+Mission Control provides a clean, responsive front-end to manage OpenClaw
+agents, API keys, and skills. Integration is achieved via direct filesystem access
+and CLI command execution, either from a Node server or within a desktop shell.
+This manual contains the full flow from user actions to OpenClaw operations –
+follow the steps above to make every feature live and connected.
+
+Happy controlling your claw!
